@@ -933,8 +933,7 @@ This README is a live spec document for what Epiphany will become. Implementatio
 ---
 
 ## License
-
-MIT, same as original Gemini CLI.
+ same as original Gemini CLI.
 
 ---
 
