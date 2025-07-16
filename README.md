@@ -8,7 +8,7 @@
 
 - **personal extreme hatred towards ambiguity , non determinism and overal stochastic nature of universe**
 
-  <img width="560" height="557" alt="image" src="https://github.com/user-attachments/assets/0a37ff6b-a72e-477c-81df-b388e7ad3b4a" />
+  <img width="300" height="330" alt="image" src="https://github.com/user-attachments/assets/0a37ff6b-a72e-477c-81df-b388e7ad3b4a" />
 
 
 
