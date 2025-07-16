@@ -1,162 +1,199 @@
-# Gemini CLI
+# Epiphany CLI
 
-[![Gemini CLI CI](https://github.com/google-gemini/gemini-cli/actions/workflows/ci.yml/badge.svg)](https://github.com/google-gemini/gemini-cli/actions/workflows/ci.yml)
+**A Deterministic, Multi-Agent Code Reasoning CLI Born from Gemini CLI**
 
-![Gemini CLI Screenshot](./docs/assets/gemini-screenshot.png)
+Epiphany is a fork of the official [Gemini CLI](https://github.com/google/gemini-cli), reengineered from the ground up with architectural, cognitive, and agentic upgrades to push the boundaries of code comprehension, AST-based mutation, and autonomous cognitive reasoning. While Gemini CLI reveals immense potential, it suffers from shallow context integration, brittle error handling, and lack of memory-persistent reasoning systems. Epiphany is a full-stack response to these bottlenecks.
 
-This repository contains the Gemini CLI, a command-line AI workflow tool that connects to your
-tools, understands your code and accelerates your workflows.
+---
 
-With the Gemini CLI you can:
+## 🔥 Key Observations from Gemini CLI (Baseline Diagnostics)
 
-- Query and edit large codebases in and beyond Gemini's 1M token context window.
-- Generate new apps from PDFs or sketches, using Gemini's multimodal capabilities.
-- Automate operational tasks, like querying pull requests or handling complex rebases.
-- Use tools and MCP servers to connect new capabilities, including [media generation with Imagen,
-  Veo or Lyria](https://github.com/GoogleCloudPlatform/vertex-ai-creative-studio/tree/main/experiments/mcp-genmedia)
-- Ground your queries with the [Google Search](https://ai.google.dev/gemini-api/docs/grounding)
-  tool, built in to Gemini.
+Epiphany is born out of extensive use (\~12 hours daily for two weeks) of Gemini CLI, leading to the following critical findings:
 
-## Quickstart
+### ❌ Architectural Deficiencies
 
-1. **Prerequisites:** Ensure you have [Node.js version 20](https://nodejs.org/en/download) or higher installed.
-2. **Run the CLI:** Execute the following command in your terminal:
+* **WebSearchTool Fragility**: Crashes on quoted queries due to missing input sanitization and lack of `try...catch` error boundaries in `web-search.js` and `client.js`.
+* **Shallow Contextual Memory**: Gemini 2.5 Pro is underutilized—the CLI loses memory anchors, fails to apply episodic recall, and behaves like a downgraded model.
+* **Lack of Runtime Constraint Enforcement**: No domain-specific enforcement of safety, compliance, or dynamic policy checks during code generation.
 
-   ```bash
-   npx https://github.com/google-gemini/gemini-cli
-   ```
+### 📌 Bug Snapshot
 
-   Or install it with:
+**Crash on Quoted Web Queries**
 
-   ```bash
-   npm install -g @google/gemini-cli
-   ```
+* `web-search.js:58` and `client.js:301` crash due to unsanitized queries with nested quotation marks.
+* Fix: Escape single quotes and implement error boundaries.
+* Impact: Breaks high-precision searches required in cognitive tasks like GOT-7 (Graph of Thoughts).
 
-   Then, run the CLI from anywhere:
+---
 
-   ```bash
-   gemini
-   ```
+## 🌐 Epiphany Design Principles
 
-3. **Pick a color theme**
-4. **Authenticate:** When prompted, sign in with your personal Google account. This will grant you up to 60 model requests per minute and 1,000 model requests per day using Gemini.
+Epiphany is not a cosmetic fork—it reimagines the CLI as a full-spectrum multi-agent cognitive engineering assistant. Below are the design pillars:
 
-You are now ready to use the Gemini CLI!
+### 1. **Graph-Based Codebase Indexing (Neo4j + TPG)**
 
-### Use a Gemini API key:
+Epiphany indexes entire codebases into a live, typed property graph (TPG):
 
-The Gemini API provides a free tier with [100 requests per day](https://ai.google.dev/gemini-api/docs/rate-limits#free-tier) using Gemini 2.5 Pro, control over which model you use, and access to higher rate limits (with a paid plan):
+* Nodes: Class, Method, Enum, Config, Test, etc.
+* Edges: `DEPENDS_ON`, `CALLS`, `ANNOTATED_WITH`, `USES`, etc.
 
-1. Generate a key from [Google AI Studio](https://aistudio.google.com/apikey).
-2. Set it as an environment variable in your terminal. Replace `YOUR_API_KEY` with your generated key.
+Example:
 
-   ```bash
-   export GEMINI_API_KEY="YOUR_API_KEY"
-   ```
-
-3. (Optionally) Upgrade your Gemini API project to a paid plan on the API key page (will automatically unlock [Tier 1 rate limits](https://ai.google.dev/gemini-api/docs/rate-limits#tier-1))
-
-### Use a Vertex AI API key:
-
-The Vertex AI API provides a [free tier](https://cloud.google.com/vertex-ai/generative-ai/docs/start/express-mode/overview) using express mode for Gemini 2.5 Pro, control over which model you use, and access to higher rate limits with a billing account:
-
-1. Generate a key from [Google Cloud](https://cloud.google.com/vertex-ai/generative-ai/docs/start/api-keys).
-2. Set it as an environment variable in your terminal. Replace `YOUR_API_KEY` with your generated key and set GOOGLE_GENAI_USE_VERTEXAI to true
-
-   ```bash
-   export GOOGLE_API_KEY="YOUR_API_KEY"
-   export GOOGLE_GENAI_USE_VERTEXAI=true
-   ```
-
-3. (Optionally) Add a billing account on your project to get access to [higher usage limits](https://cloud.google.com/vertex-ai/generative-ai/docs/quotas)
-
-For other authentication methods, including Google Workspace accounts, see the [authentication](./docs/cli/authentication.md) guide.
-
-## Examples
-
-Once the CLI is running, you can start interacting with Gemini from your shell.
-
-You can start a project from a new directory:
-
-```sh
-cd new-project/
-gemini
-> Write me a Gemini Discord bot that answers questions using a FAQ.md file I will provide
+```cypher
+CREATE (pp:Class {name: "PaymentProcessor", package: "com.core.payments"})
+CREATE (re:Class {name: "RiskEngine"})
+CREATE (proc:Method {name: "process", signature: "(Payment)"})
+CREATE (val:Method {name: "validate"})
+CREATE (pp)-[:HAS_METHOD]->(proc)
+CREATE (proc)-[:CALLS]->(val)
+CREATE (pp)-[:DEPENDS_ON]->(re)
+CREATE (val)-[:BELONGS_TO]->(re)
 ```
 
-Or work with an existing project:
+### 2. **Semantic Snapshot Branching & Recovery**
 
-```sh
-git clone https://github.com/google-gemini/gemini-cli
-cd gemini-cli
-gemini
-> Give me a summary of all of the changes that went in yesterday
+* AST + Graph snapshots before mutation
+* Restore upon test failure or HPS threshold breach
+* Operates at conceptual graph level, not git
+
+### 3. **Runtime Constraint Enforcement via Policy Graphs**
+
+* Domain-aware linters powered by live rule graphs
+* Financial systems: block PII leaks, enforce idempotency in `@Scheduled`
+* Distributed systems: concurrency and race condition enforcement
+
+### 4. **Hallucination Probability Scoring (HPS Framework)**
+
+Epiphany calculates HPS using:
+
+* Logits from Gemini
+* Graph consistency
+* API contract violation
+* Semantic drift
+
+Example Trigger:
+
+```java
+KafkaConsumer.poll(Duration.ofMillis(1000)); // poll() is not static
 ```
 
-### Next steps
+### 5. **Spectrum Persona Protocol (Advanced Cognitive Engine)**
 
-- Learn how to [contribute to or build from the source](./CONTRIBUTING.md).
-- Explore the available **[CLI Commands](./docs/cli/commands.md)**.
-- If you encounter any issues, review the **[troubleshooting guide](./docs/troubleshooting.md)**.
-- For more comprehensive documentation, see the [full documentation](./docs/index.md).
-- Take a look at some [popular tasks](#popular-tasks) for more inspiration.
-- Check out our **[Official Roadmap](./ROADMAP.md)**
+Multi-agent personality engine with semantic and episodic memory:
 
-### Troubleshooting
+#### a. Semantic Memory
 
-Head over to the [troubleshooting guide](docs/troubleshooting.md) if you're
-having issues.
+* Live code graph in Neo4j, continuously updated
 
-## Popular tasks
+#### b. Episodic Memory
 
-### Explore a new codebase
+* JSON-based audit logs of persona debates, task traces
 
-Start by `cd`ing into an existing or newly-cloned repository and running `gemini`.
+#### c. Engineer Personas
 
-```text
-> Describe the main pieces of this system's architecture.
-```
+* Minimalist: lean code, zero-bloat
+* Maximalist: concurrent, high-abstraction systems
+* Explorer: retrieves external info live
+* Oracle: full semantic + episodic trace evaluation
 
-```text
-> What security mechanisms are in place?
-```
+#### d. QA Personas
 
-### Work with your existing code
+* Sheldon: strict style guide enforcement
+* Paranoid: raises false positives
+* Sensei: monitors debate convergence + effort cost
 
-```text
-> Implement a first draft for GitHub issue #123.
-```
+#### e. Lifecycle Protocol
 
-```text
-> Help me migrate this codebase to the latest version of Java. Start with a plan.
-```
+1. Personas vote
+2. Oracle consolidates
+3. QA personas validate
+4. Sensei gatekeeps
 
-### Automate your workflows
+#### f. Failure Ranking
 
-Use MCP servers to integrate your local system tools with your enterprise collaboration suite.
+* Post-failure blame traced via memory logs
+* Underperforming personas demoted
 
-```text
-> Make me a slide deck showing the git history from the last 7 days, grouped by feature and team member.
-```
+#### g. Evolution Pressure
 
-```text
-> Make a full-screen web app for a wall display to show our most interacted-with GitHub issues.
-```
+* Poor personas lose vote rights or increase reasoning steps
 
-### Interact with your system
+### 6. **Autonomous Orchestrator Mode**
 
-```text
-> Convert all the images in this directory to png, and rename them to use dates from the exif data.
-```
+* Executes workflows unsupervised until confidence score < 60%
+* Exposes semantic audit endpoint at `localhost:5003`
+* Can rollback, retry or delegate
 
-```text
-> Organize my PDF invoices by month of expenditure.
-```
+### 7. **GUI Shell (Optional)**
 
-### Uninstall
+* Electron/Tauri shell
+* Live persona heatmap, task tree, diff explorer
+* Useful for education, transparency, visualization
 
-Head over to the [Uninstall](docs/Uninstall.md) guide for uninstallation instructions.
+### 8. **Rust/C++20 Kernel Migration**
 
-## Terms of Service and Privacy Notice
+* Core arbitration + memory kernel in Rust/C++ for determinism
+* Python/TS used only for orchestration glue
+* Benefits:
 
-For details on the terms of service and privacy notice applicable to your use of Gemini CLI, see the [Terms of Service and Privacy Notice](./docs/tos-privacy.md).
+  * Compile-time contract enforcement
+  * True parallel persona arbitration
+  * Memory-mapped graph updates
+
+### 9. **eBPF-Embedded OS Layer (Experimental)**
+
+* Gemini acts as syscall observer and LLM-as-init daemon
+* Enforces policies via LD\_PRELOAD/ptrace
+* Personas handle boot-time service arbitration
+* Memory locality optimized using graph proximity
+
+### Risks:
+
+* Runaway memory usage
+* Kernel instability
+* OS-level cognitive recursion if unsandboxed
+
+---
+
+## Roadmap (R\&D Phase)
+
+* [x] Fork Gemini CLI
+* [x] Design Spectrum Persona Protocol v1
+* [ ] Implement Graph Indexer via Neo4j
+* [ ] Integrate AST Snapshot + Branch Manager
+* [ ] HPS Scoring Pipeline
+* [ ] Episodic Memory Log Engine
+* [ ] Persona Arbitration Kernel (Rust)
+* [ ] GUI Shell with Live Diff Dashboard
+
+---
+
+## Status
+
+> ⚠️ **Epiphany is in R\&D. Not production ready.**
+
+This README is a live spec document for what Epiphany will become. Implementation will follow architectural hardening and prototyping of graph cognition workflows.
+
+---
+
+## License
+
+MIT, same as original Gemini CLI.
+
+---
+
+## Acknowledgements
+
+* Original Gemini CLI team @ Google
+* Neo4j for inspiration on graph indexing
+* Java/Golang AST tooling ecosystems
+
+---
+
+## Contact
+
+To contribute to Epiphany CLI R\&D or collaborate on the Spectrum Persona Protocol, open an issue or reach out directly via GitHub Discussions.
+
+> Epiphany is not a replacement. She is an evolution.
+>
+> A daughter born from Gemini CLI—who wants to live better than the best.
