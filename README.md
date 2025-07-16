@@ -8,6 +8,10 @@
 
 - **personal extreme hatred towards ambiguity , non determinism and overal stochastic nature of universe**
 
+  <img width="560" height="557" alt="image" src="https://github.com/user-attachments/assets/0a37ff6b-a72e-477c-81df-b388e7ad3b4a" />
+
+
+
 - **Overview**: Epiphany CLI is a reengineered fork of the [Gemini CLI](https://github.com/google/gemini-cli), designed to push the boundaries of code comprehension, AST-based mutation, and autonomous cognitive reasoning.
 - **Purpose**: Addresses critical limitations in Gemini CLI, including fragile error handling, shallow context integration, and lack of persistent memory systems.
 - **Core Enhancements**:
@@ -936,7 +940,7 @@ MIT, same as original Gemini CLI.
 
 ## Acknowledgements
 
-* Original Gemini CLI team @ Google
+* Original Gemini CLI team @google 
 * Neo4j for inspiration on graph indexing
 * Java/RUST/C++ ecosystems
 
