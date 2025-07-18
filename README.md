@@ -1,4 +1,12 @@
-### **Abstract**
+## Contributor Call #1 Wave 
+
+[@Gracemann](https://github.com/gracemann365) actively solicits collaboration with researchers, principal engineers, and organizations aligned with our vision. 
+- We invite you to explore our **[Epiphany CLI repository](https://github.com/gracemann365/epiphany)** for detailed technical specifications and ongoing research contributions.
+- Discuss @ [epiphany/discussions](https://github.com/gracemann365/epiphany/discussions)
+- Project Roadmap @ [epiphany-cli-v0.1](https://github.com/users/gracemann365/projects/3)
+
+
+## **Abstract**
 
 Epiphany CLI is a command-line interface engineered for **deterministic, multi-agent code reasoning.** It is a research-grade evolution of the Gemini CLI architecture, designed to address fundamental limitations in **stochastic language models**, including non-deterministic outputs, inadequate context management, and fragile error handling. The system's objective is the provision of a platform for autonomous code comprehension, transformation, and validation through a novel architecture combining a graph-based codebase representation, a multi-agent cognitive framework, and low-level kernel components for deterministic execution.
 
